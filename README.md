@@ -1,6 +1,6 @@
 # Chatterer-Kik-Bot
 
-This can be used on an existing webserver to implement a kik bot.
+This can be used on an existing java web server to implement a kik bot.
 
 ## Dependencies
 Add this to your pom.xml file or download the jar manually

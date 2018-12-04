@@ -56,13 +56,13 @@ public class Keyboard implements Serializable {
 		}
 		this.isHidden = isHidden;
 	}
-	
-	public static Keyboard getKeyboardWithMeta(String[] responses, boolean isHidden){
+
+	public static Keyboard getKeyboardWithMeta(String[] responses, boolean isHidden) {
 		String[] metadata = new String[responses.length];
-		for (int i = 0; i < responses.length; i++){
+		for (int i = 0; i < responses.length; i++) {
 			metadata[i] = String.valueOf(i);
 		}
-		return new Keyboard(new String[][] {responses,metadata},isHidden);
+		return new Keyboard(new String[][] { responses, metadata }, isHidden);
 	}
 
 	/**

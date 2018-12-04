@@ -33,7 +33,14 @@ public class MyBot extends Bot {
    }
    ...
    ```
- ## Recieving Messages
+ ## Authenticating Messages
+  Kik sends a HMAC-Sha1 hash using your bot's api key as the key and the message request body as the encoded string. Verifying messages on your servlet may look something like this:
+  ```
+  if (!bot.verifyMessage(requestBody.toString(), signature)) {
+			resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized request.");
+		}
+  ```
+ ## Receiving Messages
  In order to recieve messages from kik's servers, you must have a webhook set up. Incoming messages from kik can be parsed like so:
  ```
 JSONObject first = new JSONObject(json); //Construct JSONObject using string input from server
@@ -42,47 +49,17 @@ for (int i = 0; i < messages.length(); i++) {		//Messages can be sent in batches
 	Message message = new Message(messages.getJSONObject(i), bot); //Create new message using the json line and your bot
 	message.setTypeTime(1000); //Set time (int milliseconds) app will say "is Typing..." before message is received
 ```
-After the message is created, you can use the message type to determine how to respond. I found that a switch statement works best: 
+After the message is created, you can use the Bot.processMessage() class which automatically calls the proper response class based on the message type 
 ```
-int type = message.getType();
-switch (type) {
-	case Message.TYPE_TEXT:
-		bot.onTextMessage(message);
-		break;
-	case Message.TYPE_FRIEND_PICKER:
-		bot.onFriendPickerMessage(message);
-		break;
-	case Message.TYPE_STICKER:
-		bot.onStickerMessage(message);
-		break;
-	case Message.TYPE_DELIVERY_RECEIPT:
-		bot.onDeliveryReceiptMessage(message);
-		break;
-	case Message.TYPE_IMAGE:
-		bot.onPictureMessage(message);
-		break;
-	case Message.TYPE_IS_TYPING:
-		bot.onIsTypingMessage(message);
-		break;
-	case Message.TYPE_START_CHATTING:
-		bot.onStartChattingMessage(message);
-		break;
-	case Message.TYPE_READ_RECEIPT:
-		bot.onReadReceiptMessage(message);
-		break;
-	case Message.TYPE_VIDEO:
-		bot.onVideoMessage(message);
-		break;
-	case Message.TYPE_SCAN_DATA:
-		bot.onScanDataMessage(message);
-		break;
-	case Message.TYPE_LINK:
-		bot.onLinkMessage(message);
-		break;
-	default:
-		bot.onTextMessage(message);
-		break;
-}
+boolean responded = bot.processMessage(message);
+			if (responded) {
+				// Bot replied to message successfully
+				System.out.println("Bot responded.");
+			} else {
+				// For some reason, the bot never responded, can put default,
+				// catchall response here
+				System.out.println("Bot did not respond!");
+			}
 ```
 ## Sending Messages
 Text based messages can be sent in three different ways.

@@ -11,6 +11,7 @@ import java.util.Base64;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import org.apache.commons.codec.digest.HmacUtils;
 import org.json.JSONObject;
 
 /**
@@ -172,7 +173,8 @@ public abstract class Bot implements Serializable {
 	 * @param json
 	 *            Prebuilt JSON
 	 * @return HTTP status code
-	 * @throws IOException server responds with error code
+	 * @throws IOException
+	 *             server responds with error code
 	 */
 	public String send(JSONObject json) throws IOException {
 		return post(ENDPOINT_MSG, json);
@@ -186,7 +188,8 @@ public abstract class Bot implements Serializable {
 	 * @param json
 	 *            JSON payload
 	 * @return HTTP status code
-	 * @throws IOException server responds with error code
+	 * @throws IOException
+	 *             server responds with error code
 	 */
 	public String post(String endpoint, JSONObject json) throws IOException {
 		URL obj = null;
@@ -316,6 +319,63 @@ public abstract class Bot implements Serializable {
 		return mes;
 	}
 
+	/**
+	 * Triggers proper response for incoming message based on message type
+	 * 
+	 * @param message
+	 *            incoming message
+	 * @return if the bot responded to message successfully
+	 */
+	public boolean processMessage(Message message) {
+		int type = message.getType();
+		switch (type) {
+		case Message.TYPE_TEXT:
+			try {
+				this.onTextMessage(message);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			break;
+		case Message.TYPE_FRIEND_PICKER:
+			this.onFriendPickerMessage(message);
+			break;
+		case Message.TYPE_STICKER:
+			this.onStickerMessage(message);
+			break;
+		// Returns true because response is not necessary
+		case Message.TYPE_DELIVERY_RECEIPT:
+			this.onDeliveryReceiptMessage(message);
+			return true;
+		case Message.TYPE_IMAGE:
+			this.onPictureMessage(message);
+			break;
+		// Returns true because response is not necessary
+		case Message.TYPE_IS_TYPING:
+			this.onIsTypingMessage(message);
+			return true;
+		case Message.TYPE_START_CHATTING:
+			this.onStartChattingMessage(message);
+			break;
+		// Returns true because response is not necessary
+		case Message.TYPE_READ_RECEIPT:
+			this.onReadReceiptMessage(message);
+			return true;
+		case Message.TYPE_VIDEO:
+			this.onVideoMessage(message);
+			break;
+		case Message.TYPE_SCAN_DATA:
+			this.onScanDataMessage(message);
+			break;
+		case Message.TYPE_LINK:
+			this.onLinkMessage(message);
+			break;
+		default:
+			this.onTextMessage(message);
+			break;
+		}
+		return message.hasReplied();
+	}
+
 	public abstract Keyboard getDefaultKeyboard(String from);
 
 	public abstract void onTextMessage(Message message);
@@ -346,6 +406,24 @@ public abstract class Bot implements Serializable {
 
 	public boolean equals(String username) {
 		return this.username.equalsIgnoreCase(username);
+	}
+
+	/**
+	 * Calculates HMACSha1 hash of message response body using bot's api key as
+	 * the key for the hash. If calculated hash matches the signature, the
+	 * message is valid. Explanation given here
+	 * https://dev.kik.com/#/docs/messaging#receiving-messages under the "API
+	 * Authentication With Webhook" section
+	 * 
+	 * @param responseBody
+	 *            body of incoming request
+	 * @param signature
+	 *            signature provided in header of incoming request
+	 * @return if the given signature matches or not
+	 */
+	public boolean verifyMessage(String responseBody, String signature) {
+		String calculatedHash = HmacUtils.hmacSha1Hex(apikey, responseBody).toUpperCase();
+		return calculatedHash.equalsIgnoreCase(signature);
 	}
 
 }

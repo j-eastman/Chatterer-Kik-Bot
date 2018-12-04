@@ -14,11 +14,11 @@ import org.json.JSONObject;
  * @author Jack Eastman
  *
  */
-public class Message implements Serializable{
+public class Message implements Serializable {
 	/**
 	 * 
 	 */
-	
+
 	private static final long serialVersionUID = 1L;
 	public static final String TEXT = "text", FRIEND_PICKER = "friend-picker", STICKER = "sticker",
 			DELIVERY_RECEIPT = "delivery-receipt", LINK = "link", IMAGE = "picture", IS_TYPING = "is-typing",
@@ -28,15 +28,17 @@ public class Message implements Serializable{
 			TYPE_VIDEO = 9, TYPE_SCAN_DATA = 10;
 	public String chatId, id, type, from, body, timestamp, readReceiptRequested, mention, metadata, picUrl, videoUrl,
 			chatType;
-	public static final String ICON_URL = ""; //TODO: FILL ME IN
+	public static final String ICON_URL = ""; // TODO: FILL ME IN
 	public String[] participants;
 	public Keyboard keyboard;
 	public boolean isDirect;
 	transient JSONObject incoming;
 	transient JSONObject attribution;
-	transient ArrayList<JSONObject> responses; // Referred to as "JSON list" below
+	transient ArrayList<JSONObject> responses; // Referred to as "JSON list"
+												// below
 	ArrayList<Object[]> resps;
 	int typeTime = -1;
+	private boolean hasReplied;
 	public Bot bot;
 
 	/**
@@ -60,7 +62,7 @@ public class Message implements Serializable{
 		mention = getString("mention");
 		metadata = getString("metadata");
 		chatType = getString("chatType");
-		if (chatType != null && chatType.equalsIgnoreCase("direct")){
+		if (chatType != null && chatType.equalsIgnoreCase("direct")) {
 			isDirect = true;
 		} else {
 			isDirect = false;
@@ -74,6 +76,7 @@ public class Message implements Serializable{
 		}
 		responses = new ArrayList<JSONObject>();
 		resps = new ArrayList<Object[]>();
+		hasReplied = false;
 	}
 
 	/**
@@ -111,7 +114,9 @@ public class Message implements Serializable{
 	}
 
 	/**
-	 * Check whether chat participants include a given username
+	 * Check whether chat participants include a given username WARNING: This
+	 * method no longer works in public groups due to changes with kik's JID
+	 * system
 	 * 
 	 * @param username
 	 *            Username to search for
@@ -142,6 +147,12 @@ public class Message implements Serializable{
 		responses.add(getSingleJSON(message));
 	}
 
+	/**
+	 * Add picture reply to waiting JSON list
+	 * 
+	 * @param url
+	 *            URL of picture to send
+	 */
 	public void addPicReply(String url) {
 		Object[] temp = new Object[2];
 		temp[0] = "pic";
@@ -149,7 +160,7 @@ public class Message implements Serializable{
 		resps.add(temp);
 		responses.add(getPicMsgJSON(url, null, null));
 	}
-	
+
 	/**
 	 * Add picture reply to waiting JSON list
 	 * 
@@ -166,6 +177,16 @@ public class Message implements Serializable{
 		responses.add(getPicMsgJSON(url, attrib, ICON_URL));
 	}
 
+	/**
+	 * Add picture reply to waiting JSON list
+	 * 
+	 * @param url
+	 *            URL of picture to send
+	 * @param attrib
+	 *            Any attribution you might want to add
+	 * @param iconUrl
+	 *            URL of icon displayed
+	 */
 	public void addPicReply(String url, String attrib, String iconUrl) {
 		Object[] temp = new Object[2];
 		temp[0] = "pic";
@@ -276,12 +297,14 @@ public class Message implements Serializable{
 		JSONObject out = new JSONObject();
 		if (responses.size() > 0) {
 			try {
+				// Can only send a max of 25 messages at a time
 				JSONObject[] msgs = new JSONObject[Math.min(25, responses.size())];
 				for (int i = 0; i < Math.min(25, responses.size()); i++) {
 					msgs[i] = responses.get(i);
 				}
 				out.put("messages", msgs);
 				bot.send(out);
+				hasReplied = true;
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -297,6 +320,7 @@ public class Message implements Serializable{
 	public void reply(String message) {
 		try {
 			bot.send(getJSON(message));
+			hasReplied = true;
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -409,7 +433,6 @@ public class Message implements Serializable{
 	 * @return Formatted JSON
 	 */
 	public JSONObject getJSON(String response) {
-		// body, to, type, chatId
 		JSONObject retVal = new JSONObject();
 		JSONObject message = new JSONObject();
 		response = response.substring(0, Math.min(2000, response.length()));
@@ -526,14 +549,24 @@ public class Message implements Serializable{
 		return message;
 	}
 
-	public boolean isPrivate(){
+	public boolean isPrivate() {
 		return chatType.equalsIgnoreCase("private");
 	}
-	public boolean isPublic(){
+
+	public boolean isPublic() {
 		return chatType.equalsIgnoreCase("public");
 	}
-	public boolean isDirect(){
+
+	public boolean isDirect() {
 		return chatType.equalsIgnoreCase("direct");
+	}
+
+	public boolean hasMetadata() {
+		return !(metadata == null);
+	}
+
+	public boolean hasReplied() {
+		return hasReplied;
 	}
 
 }

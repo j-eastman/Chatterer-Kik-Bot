@@ -36,9 +36,9 @@ public class MyBot extends Bot {
  ## Authenticating Messages
   Kik sends a HMAC-Sha1 hash using your bot's api key as the key and the message request body as the encoded string. Verifying messages on your servlet may look something like this:
   ```
-  if (!bot.verifyMessage(requestBody.toString(), signature)) {
-			resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized request.");
-		}
+ if (!bot.verifyMessage(requestBody.toString(), signature)) {
+	resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized request.");
+}
   ```
  ## Receiving Messages
  In order to recieve messages from kik's servers, you must have a webhook set up. Incoming messages from kik can be parsed like so:
@@ -52,14 +52,14 @@ for (int i = 0; i < messages.length(); i++) {		//Messages can be sent in batches
 After the message is created, you can use the Bot.processMessage() class which automatically calls the proper response class based on the message type 
 ```
 boolean responded = bot.processMessage(message);
-			if (responded) {
-				// Bot replied to message successfully
-				System.out.println("Bot responded.");
-			} else {
-				// For some reason, the bot never responded, can put default,
-				// catchall response here
-				System.out.println("Bot did not respond!");
-			}
+if (responded) {
+	// Bot replied to message successfully
+	System.out.println("Bot responded.");
+} else {
+	// For some reason, the bot never responded, can put default,
+	// catchall response here
+	System.out.println("Bot did not respond!");
+}
 ```
 ## Sending Messages
 Text based messages can be sent in three different ways.

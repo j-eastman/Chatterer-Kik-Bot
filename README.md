@@ -3,13 +3,18 @@
 This can be used on an existing java web server to implement a kik bot.
 
 ## Dependencies
-Add this to your pom.xml file or download the jar manually
+Add this to your pom.xml file or download the jar(s) manually
 ```
 <dependency>
   <groupId>org.json</groupId>
   <artifactId>json</artifactId> 
   <version>20160810</version>
  </dependency>
+<dependency>
+  <groupId>commons-codec</groupId>
+  <artifactId>commons-codec</artifactId>
+  <version>1.11</version>
+</dependency>
  ```
 ## Implementation
 The Bot class is abstract so you will need to create your own class that extends it.

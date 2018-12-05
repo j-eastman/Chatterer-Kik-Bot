@@ -41,6 +41,7 @@ public class MyBot extends Bot {
  ## Authenticating Messages
   Kik sends a HMAC-Sha1 hash using your bot's api key as the key and the message request body as the encoded string. Verifying messages on your servlet may look something like this:
   ```
+ ExampleBot bot = new Bot("<BOT_USERNAME>","BOT_API_KEY","BOT_WEBHOOK");
  if (!bot.verifyMessage(requestBody.toString(), signature)) {
 	resp.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized request.");
 }
